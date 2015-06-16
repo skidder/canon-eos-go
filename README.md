@@ -1,5 +1,5 @@
 # canon-eos-go
-Go bindings for Canon EOS (tm) camera SDK
+Go bindings for Canon EOS (tm) camera OS X SDK
 
 **This is experimental and under active development, don't expect much**
 
