@@ -75,6 +75,8 @@ func (e *EOSClient) GetCameraModels() (cameras []CameraModel, err error) {
 			deviceSubType:       (uint32)(eosCameraDeviceInfo.deviceSubType),
 			reserved:            (uint32)(eosCameraDeviceInfo.reserved),
 		})
+		defer C.free(unsafe.Pointer(&eosCameraDeviceInfo.szPortName))
+		defer C.free(unsafe.Pointer(&eosCameraDeviceInfo.szDeviceDescription))
 	}
 
 	return
