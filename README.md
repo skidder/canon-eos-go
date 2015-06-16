@@ -12,7 +12,8 @@ Once downloaded, copy the header and framework files to the system locations:
 sudo mkdir /usr/local/include/EDSDK
 sudo cp EDSDK/Header/*.h /usr/local/include/EDSDK
 
-sudo cp EDSDK/Framework/* /Library/Frameworks/
+sudo cp -r EDSDK/Framework/DPP.framework /Library/Frameworks/
+sudo cp -r EDSDK/Framework/EDSDK.framework /Library/Frameworks/
 ```
 
 ## Building
