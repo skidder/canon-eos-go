@@ -18,5 +18,5 @@ sudo cp -r EDSDK/Framework/EDSDK.framework /Library/Frameworks/
 
 ## Building
 ```shell
-go build ./...
+make all
 ```
