@@ -38,36 +38,48 @@ func (p *EOSClient) Close() (err error) {
 	return
 }
 
-func (e *EOSClient) GetCameraModels() (cameras []CameraModel, err error) {
+// A strategy chooses an action for any given score.
+type cameraAddedHandler func()
+
+// Assign a callback function for when cameras are added (connected).
+func (e *EOSClient) SetCameraAddedHandler(h cameraAddedHandler) {
+	C.EdsSetCameraAddedHandler((*[0]byte)(unsafe.Pointer(&h)), nil)
+}
+
+// Get an array representing the cameras currently connected.  Each CameraModel
+// instance must be released by invoking the Release function once no longer
+// needed.
+func (e *EOSClient) GetCameraModels() ([]CameraModel, error) {
 	var eosCameraList *C.EdsCameraListRef
 	var eosError C.EdsError
 	var cameraCount int
 
 	// get a reference to the cameras list record
 	if eosError = C.EdsGetCameraList((*C.EdsCameraListRef)(unsafe.Pointer(&eosCameraList))); eosError != C.EDS_ERR_OK {
-		err = errors.New("Error when obtaining reference to list of cameras")
-		return
+		err := errors.New("Error when obtaining reference to list of cameras")
+		return nil, err
 	}
 	defer C.EdsRelease((*C.struct___EdsObject)(unsafe.Pointer(&eosCameraList)))
 
 	// get the number of cameras connected
 	if eosError = C.EdsGetChildCount((*C.struct___EdsObject)(unsafe.Pointer(eosCameraList)), (*C.EdsUInt32)(unsafe.Pointer(&cameraCount))); eosError != C.EDS_ERR_OK {
-		err = errors.New("Error when obtaining count of cameras")
-		return
+		err := errors.New("Error when obtaining count of cameras")
+		return nil, err
 	}
 
 	// get details for each camera detected
+	cameras := make([]CameraModel, cameraCount)
 	for i := 0; i < cameraCount; i++ {
 		var eosCameraRef *C.EdsCameraRef
 		if eosError = C.EdsGetChildAtIndex((*C.struct___EdsObject)(unsafe.Pointer(eosCameraList)), (C.EdsInt32)(i), (*C.EdsBaseRef)(unsafe.Pointer(&eosCameraRef))); eosError != C.EDS_ERR_OK {
-			err = errors.New("Error when obtaining camera")
-			return
+			err := errors.New("Error when obtaining camera")
+			return nil, err
 		}
 
 		var eosCameraDeviceInfo C.EdsDeviceInfo
 		if eosError = C.EdsGetDeviceInfo((*C.struct___EdsObject)(unsafe.Pointer(eosCameraRef)), (*C.EdsDeviceInfo)(unsafe.Pointer(&eosCameraDeviceInfo))); eosError != C.EDS_ERR_OK {
-			err = errors.New("Error when obtaining camera device info")
-			return
+			err := errors.New("Error when obtaining camera device info")
+			return nil, err
 		}
 
 		// instantiate new CameraModel with the camera reference and model details
@@ -80,5 +92,5 @@ func (e *EOSClient) GetCameraModels() (cameras []CameraModel, err error) {
 		})
 	}
 
-	return
+	return cameras, nil
 }

@@ -12,6 +12,15 @@ func TestInitializeAndClose(t *testing.T) {
 	assert.Nil(t, e.Close())
 }
 
+func TestSetCameraAddedHandler(t *testing.T) {
+	e := NewEOSClient()
+	e.Initialize()
+	defer e.Close()
+
+	f := func() { t.Log("Camera connected!") }
+	e.SetCameraAddedHandler(f)
+}
+
 // A single Canon T4i camera must be connected in order to run as expected.
 func TestGetCameraModels(t *testing.T) {
 	e := NewEOSClient()
