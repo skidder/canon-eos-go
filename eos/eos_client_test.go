@@ -24,8 +24,11 @@ func TestGetCameraModels(t *testing.T) {
 	assert.Nil(t, err)
 
 	// verify values in the first model entry
-	assert.Equal(t, "Canon EOS REBEL T4i", models[0].szDeviceDescription)
-	assert.Equal(t, "0", models[0].szPortName)
-	assert.Equal(t, 2971958586, int(models[0].reserved))
-	assert.Equal(t, 1, int(models[0].deviceSubType))
+	camera := models[0]
+	defer camera.Release()
+	assert.NotNil(t, camera.camera)
+	assert.Equal(t, "Canon EOS REBEL T4i", camera.szDeviceDescription)
+	assert.Equal(t, "0", camera.szPortName)
+	assert.Equal(t, 2971958586, int(camera.reserved))
+	assert.Equal(t, 1, int(camera.deviceSubType))
 }

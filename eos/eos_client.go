@@ -8,7 +8,9 @@ package eos
 #include <EDSDK/EDSDKTypes.h>
 #include <stdlib.h>
 */
-import "C"
+import (
+	"C"
+)
 import (
 	"errors"
 	"unsafe"
@@ -61,7 +63,6 @@ func (e *EOSClient) GetCameraModels() (cameras []CameraModel, err error) {
 			err = errors.New("Error when obtaining camera")
 			return
 		}
-		defer C.EdsRelease((*C.struct___EdsObject)(unsafe.Pointer(&eosCameraRef)))
 
 		var eosCameraDeviceInfo C.EdsDeviceInfo
 		if eosError = C.EdsGetDeviceInfo((*C.struct___EdsObject)(unsafe.Pointer(eosCameraRef)), (*C.EdsDeviceInfo)(unsafe.Pointer(&eosCameraDeviceInfo))); eosError != C.EDS_ERR_OK {
@@ -69,22 +70,15 @@ func (e *EOSClient) GetCameraModels() (cameras []CameraModel, err error) {
 			return
 		}
 
+		// instantiate new CameraModel with the camera reference and model details
 		cameras = append(cameras, CameraModel{
+			camera:              eosCameraRef,
 			szPortName:          C.GoString((*_Ctype_char)(&eosCameraDeviceInfo.szPortName[0])),
 			szDeviceDescription: C.GoString((*_Ctype_char)(&eosCameraDeviceInfo.szDeviceDescription[0])),
 			deviceSubType:       (uint32)(eosCameraDeviceInfo.deviceSubType),
 			reserved:            (uint32)(eosCameraDeviceInfo.reserved),
 		})
-		defer C.free(unsafe.Pointer(&eosCameraDeviceInfo.szPortName))
-		defer C.free(unsafe.Pointer(&eosCameraDeviceInfo.szDeviceDescription))
 	}
 
 	return
-}
-
-type CameraModel struct {
-	szPortName          string
-	szDeviceDescription string
-	deviceSubType       uint32
-	reserved            uint32
 }
