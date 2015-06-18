@@ -9,13 +9,13 @@ import (
 func TestInitializeAndClose(t *testing.T) {
 	e := NewEOSClient()
 	assert.Nil(t, e.Initialize())
-	assert.Nil(t, e.Close())
+	assert.Nil(t, e.Release())
 }
 
 func TestSetCameraAddedHandler(t *testing.T) {
 	e := NewEOSClient()
 	e.Initialize()
-	defer e.Close()
+	defer e.Release()
 
 	f := func() { t.Log("Camera connected!") }
 	e.SetCameraAddedHandler(f)
@@ -25,7 +25,7 @@ func TestSetCameraAddedHandler(t *testing.T) {
 func TestGetCameraModels(t *testing.T) {
 	e := NewEOSClient()
 	e.Initialize()
-	defer e.Close()
+	defer e.Release()
 
 	models, err := e.GetCameraModels()
 	assert.NotNil(t, models)

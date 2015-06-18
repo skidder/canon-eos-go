@@ -22,6 +22,7 @@ func NewEOSClient() *EOSClient {
 	return &EOSClient{}
 }
 
+// Initialize a new EOSClient instance
 func (e *EOSClient) Initialize() (err error) {
 	eosError := C.EdsInitializeSDK()
 	if eosError != C.EDS_ERR_OK {
@@ -30,7 +31,8 @@ func (e *EOSClient) Initialize() (err error) {
 	return
 }
 
-func (p *EOSClient) Close() (err error) {
+// Release the EOSClient, must be called on termination
+func (p *EOSClient) Release() (err error) {
 	eosError := C.EdsTerminateSDK()
 	if eosError != C.EDS_ERR_OK {
 		err = errors.New("Error when terminating Canon SDK")
@@ -38,11 +40,8 @@ func (p *EOSClient) Close() (err error) {
 	return
 }
 
-// A strategy chooses an action for any given score.
-type cameraAddedHandler func()
-
-// Assign a callback function for when cameras are added (connected).
-func (e *EOSClient) SetCameraAddedHandler(h cameraAddedHandler) {
+// Assign a callback function for when cameras are removed (disconnected).
+func (e *EOSClient) SetCameraAddedHandler(h func()) {
 	C.EdsSetCameraAddedHandler((*[0]byte)(unsafe.Pointer(&h)), nil)
 }
 
