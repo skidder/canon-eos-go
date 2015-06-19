@@ -45,7 +45,7 @@ func TestGetCameraModels(t *testing.T) {
 	assert.Equal(t, 1, int(camera.deviceSubType))
 }
 
-// A single Canon T4i camera must be connected in order to run as expected.
+// At least one camera must be connected in order to run successfully.
 func TestTakePicture(t *testing.T) {
 	e := NewEOSClient()
 	e.Initialize()
