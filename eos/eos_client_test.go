@@ -2,7 +2,6 @@ package eos
 
 import (
 	"testing"
-	// "time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -11,17 +10,6 @@ func TestInitializeAndClose(t *testing.T) {
 	e := NewEOSClient()
 	assert.Nil(t, e.Initialize())
 	assert.Nil(t, e.Release())
-}
-
-func TestSetCameraAddedHandler(t *testing.T) {
-	e := NewEOSClient()
-	e.Initialize()
-	defer e.Release()
-
-	f := func() { t.Log("Camera connected!") }
-	e.SetCameraAddedHandler(f)
-	// t.Log("Waiting for connect")
-	// time.Sleep(15 * time.Second)
 }
 
 // A single Canon T4i camera must be connected in order to run as expected.

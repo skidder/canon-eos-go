@@ -24,26 +24,21 @@ func NewEOSClient() *EOSClient {
 }
 
 // Initialize a new EOSClient instance
-func (e *EOSClient) Initialize() (err error) {
+func (e *EOSClient) Initialize() error {
 	eosError := C.EdsInitializeSDK()
 	if eosError != C.EDS_ERR_OK {
-		err = errors.New("Error when initializing Canon SDK")
+		return errors.New("Error when initializing Canon SDK")
 	}
-	return
+	return nil
 }
 
 // Release the EOSClient, must be called on termination
-func (p *EOSClient) Release() (err error) {
+func (p *EOSClient) Release() error {
 	eosError := C.EdsTerminateSDK()
 	if eosError != C.EDS_ERR_OK {
-		err = errors.New("Error when terminating Canon SDK")
+		return errors.New("Error when terminating Canon SDK")
 	}
-	return
-}
-
-// Assign a callback function for when cameras are removed (disconnected).
-func (e *EOSClient) SetCameraAddedHandler(h func()) {
-	C.EdsSetCameraAddedHandler((*[0]byte)(unsafe.Pointer(&h)), nil)
+	return nil
 }
 
 // Get an array representing the cameras currently connected.  Each CameraModel
