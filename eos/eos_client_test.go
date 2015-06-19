@@ -2,6 +2,7 @@ package eos
 
 import (
 	"testing"
+	// "time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -19,6 +20,8 @@ func TestSetCameraAddedHandler(t *testing.T) {
 
 	f := func() { t.Log("Camera connected!") }
 	e.SetCameraAddedHandler(f)
+	// t.Log("Waiting for connect")
+	// time.Sleep(15 * time.Second)
 }
 
 // A single Canon T4i camera must be connected in order to run as expected.
@@ -40,4 +43,17 @@ func TestGetCameraModels(t *testing.T) {
 	assert.Equal(t, "0", camera.szPortName)
 	assert.Equal(t, 2971958586, int(camera.reserved))
 	assert.Equal(t, 1, int(camera.deviceSubType))
+}
+
+// A single Canon T4i camera must be connected in order to run as expected.
+func TestTakePicture(t *testing.T) {
+	e := NewEOSClient()
+	e.Initialize()
+	defer e.Release()
+
+	models, _ := e.GetCameraModels()
+	camera := models[0]
+	defer camera.Release()
+	pictureErr := camera.TakePicture()
+	assert.Nil(t, pictureErr)
 }
