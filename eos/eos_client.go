@@ -17,6 +17,13 @@ import (
 	"unsafe"
 )
 
+type LiveViewOutputDevice int
+
+const (
+	TFT LiveViewOutputDevice = iota
+	PC
+)
+
 type EOSClient struct{}
 
 func NewEOSClient() *EOSClient {
@@ -91,6 +98,7 @@ type CameraModel struct {
 	camera         *C.EdsCameraRef
 	sessionOpen    bool
 	liveViewActive bool
+	liveViewDevice int
 
 	szPortName          string
 	szDeviceDescription string
@@ -134,7 +142,7 @@ func (c *CameraModel) TakePicture() error {
 	return nil
 }
 
-// Start LiveView on the PC
+// Start LiveView on the device configured with SetLiveViewOutputDevice
 func (c *CameraModel) StartLiveView() error {
 	if c.sessionOpen == false {
 		return errors.New("Session is not open, must call OpenSession first")
@@ -150,8 +158,8 @@ func (c *CameraModel) StartLiveView() error {
 		return errors.New(fmt.Sprintf("Error getting output device property when activating LiveMode (code=%d)", eosError))
 	}
 
-	// connect PC to Live View output device
-	device |= C.kEdsEvfOutputDevice_PC
+	// connect Live View output device
+	device |= c.liveViewDevice
 	eosError = C.EdsSetPropertyData((*C.struct___EdsObject)(unsafe.Pointer(c.camera)), C.kEdsPropID_Evf_OutputDevice, 0, (C.EdsUInt32)(unsafe.Sizeof(device)), unsafe.Pointer(&device))
 	if eosError != C.EDS_ERR_OK {
 		return errors.New(fmt.Sprintf("Error setting output device property when activating LiveMode (code=%d)", eosError))
@@ -160,7 +168,7 @@ func (c *CameraModel) StartLiveView() error {
 	return nil
 }
 
-// Stop LiveView on the PC
+// Stop LiveView on the device configured with SetLiveViewOutputDevice
 func (c *CameraModel) StopLiveView() error {
 	if c.sessionOpen == false {
 		return errors.New("Session is not open, must call OpenSession first")
@@ -176,8 +184,8 @@ func (c *CameraModel) StopLiveView() error {
 		return errors.New(fmt.Sprintf("Error getting output device property when stopping LiveMode (code=%d)", eosError))
 	}
 
-	// connect PC to Live View output device
-	device &= ^C.kEdsEvfOutputDevice_PC
+	// disconnect Live View output device
+	device &= ^c.liveViewDevice
 	eosError = C.EdsSetPropertyData((*C.struct___EdsObject)(unsafe.Pointer(c.camera)), C.kEdsPropID_Evf_OutputDevice, 0, (C.EdsUInt32)(unsafe.Sizeof(device)), unsafe.Pointer(&device))
 	if eosError != C.EDS_ERR_OK {
 		return errors.New(fmt.Sprintf("Error setting output device property when stopping LiveMode (code=%d)", eosError))
@@ -193,4 +201,25 @@ func (c *CameraModel) ToggleLiveView() error {
 	} else {
 		return c.StartLiveView()
 	}
+}
+
+// Set the device to use with LiveView.  Will stop LiveView if already active on a device
+func (c *CameraModel) SetLiveViewOutputDevice(device LiveViewOutputDevice) error {
+	if c.liveViewActive {
+		if err := c.StopLiveView(); err != nil {
+			return err
+		}
+	}
+
+	switch device {
+	case TFT:
+		c.liveViewDevice = C.kEdsEvfOutputDevice_TFT
+		break
+	case PC:
+		c.liveViewDevice = C.kEdsEvfOutputDevice_PC
+		break
+	default:
+		return errors.New("Unrecognized LiveView device supplied")
+	}
+	return nil
 }
