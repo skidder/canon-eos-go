@@ -81,9 +81,6 @@ func (e *EOSClient) GetCameraModels() ([]CameraModel, error) {
 			deviceSubType:       (uint32)(eosCameraDeviceInfo.deviceSubType),
 			reserved:            (uint32)(eosCameraDeviceInfo.reserved),
 		}
-		if err := camera.Initialize(); err != nil {
-			return nil, err
-		}
 		cameras = append(cameras, camera)
 	}
 
@@ -91,7 +88,9 @@ func (e *EOSClient) GetCameraModels() ([]CameraModel, error) {
 }
 
 type CameraModel struct {
-	camera *C.EdsCameraRef
+	camera         *C.EdsCameraRef
+	sessionOpen    bool
+	liveViewActive bool
 
 	szPortName          string
 	szDeviceDescription string
@@ -99,26 +98,99 @@ type CameraModel struct {
 	reserved            uint32
 }
 
-// Initialize the CameraModel
-func (c *CameraModel) Initialize() error {
+// Releases reference to the camera
+func (c *CameraModel) Release() {
+	C.EdsRelease((*C.struct___EdsObject)(unsafe.Pointer(&c.camera)))
+}
+
+// Open a session with the camera for sending commands
+func (c *CameraModel) OpenSession() error {
 	eosError := C.EdsOpenSession((*C.struct___EdsObject)(unsafe.Pointer(c.camera)))
 	if eosError != C.EDS_ERR_OK {
 		return errors.New(fmt.Sprintf("Error when opening session with camera (code=%d)", eosError))
 	}
+	c.sessionOpen = true
 	return nil
 }
 
-// Releases reference to the camera
-func (c *CameraModel) Release() {
+// Close an existing camera session
+func (c *CameraModel) CloseSession() {
+	if c.sessionOpen == false {
+		return
+	}
+	c.sessionOpen = false
 	C.EdsCloseSession((*C.struct___EdsObject)(unsafe.Pointer(&c.camera)))
-	C.EdsRelease((*C.struct___EdsObject)(unsafe.Pointer(&c.camera)))
 }
 
 // Take a picture
 func (c *CameraModel) TakePicture() error {
+	if c.sessionOpen == false {
+		return errors.New("Session is not open, must call OpenSession first")
+	}
 	eosError := C.EdsSendCommand((*C.struct___EdsObject)(unsafe.Pointer(c.camera)), C.kEdsCameraCommand_TakePicture, 0)
 	if eosError != C.EDS_ERR_OK {
 		return errors.New(fmt.Sprintf("Error when taking picture (code=%d)", eosError))
 	}
 	return nil
+}
+
+// Start LiveView on the PC
+func (c *CameraModel) StartLiveView() error {
+	if c.sessionOpen == false {
+		return errors.New("Session is not open, must call OpenSession first")
+	}
+
+	if c.liveViewActive == true {
+		return errors.New("LiveView is already active, cannot start")
+	}
+
+	var device int
+	eosError := C.EdsGetPropertyData((*C.struct___EdsObject)(unsafe.Pointer(c.camera)), C.kEdsPropID_Evf_OutputDevice, 0, (C.EdsUInt32)(unsafe.Sizeof(device)), unsafe.Pointer(&device))
+	if eosError != C.EDS_ERR_OK {
+		return errors.New(fmt.Sprintf("Error getting output device property when activating LiveMode (code=%d)", eosError))
+	}
+
+	// connect PC to Live View output device
+	device |= C.kEdsEvfOutputDevice_PC
+	eosError = C.EdsSetPropertyData((*C.struct___EdsObject)(unsafe.Pointer(c.camera)), C.kEdsPropID_Evf_OutputDevice, 0, (C.EdsUInt32)(unsafe.Sizeof(device)), unsafe.Pointer(&device))
+	if eosError != C.EDS_ERR_OK {
+		return errors.New(fmt.Sprintf("Error setting output device property when activating LiveMode (code=%d)", eosError))
+	}
+	c.liveViewActive = true
+	return nil
+}
+
+// Stop LiveView on the PC
+func (c *CameraModel) StopLiveView() error {
+	if c.sessionOpen == false {
+		return errors.New("Session is not open, must call OpenSession first")
+	}
+
+	if c.liveViewActive == false {
+		return errors.New("LiveView is already inactive, cannot stop")
+	}
+
+	var device int
+	eosError := C.EdsGetPropertyData((*C.struct___EdsObject)(unsafe.Pointer(c.camera)), C.kEdsPropID_Evf_OutputDevice, 0, (C.EdsUInt32)(unsafe.Sizeof(device)), unsafe.Pointer(&device))
+	if eosError != C.EDS_ERR_OK {
+		return errors.New(fmt.Sprintf("Error getting output device property when stopping LiveMode (code=%d)", eosError))
+	}
+
+	// connect PC to Live View output device
+	device &= ^C.kEdsEvfOutputDevice_PC
+	eosError = C.EdsSetPropertyData((*C.struct___EdsObject)(unsafe.Pointer(c.camera)), C.kEdsPropID_Evf_OutputDevice, 0, (C.EdsUInt32)(unsafe.Sizeof(device)), unsafe.Pointer(&device))
+	if eosError != C.EDS_ERR_OK {
+		return errors.New(fmt.Sprintf("Error setting output device property when stopping LiveMode (code=%d)", eosError))
+	}
+	c.liveViewActive = false
+	return nil
+}
+
+// Toggle the LiveView state of the camera
+func (c *CameraModel) ToggleLiveView() error {
+	if c.liveViewActive {
+		return c.StopLiveView()
+	} else {
+		return c.StartLiveView()
+	}
 }

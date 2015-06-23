@@ -42,6 +42,7 @@ func TestTakePicture(t *testing.T) {
 	models, _ := e.GetCameraModels()
 	camera := models[0]
 	defer camera.Release()
-	pictureErr := camera.TakePicture()
-	assert.Nil(t, pictureErr)
+	assert.Nil(t, camera.OpenSession())
+	defer camera.CloseSession()
+	assert.Nil(t, camera.TakePicture())
 }
