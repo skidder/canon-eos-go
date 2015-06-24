@@ -2,6 +2,7 @@ package eos
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -45,4 +46,42 @@ func TestTakePicture(t *testing.T) {
 	assert.Nil(t, camera.OpenSession())
 	defer camera.CloseSession()
 	assert.Nil(t, camera.TakePicture())
+}
+
+// At least one camera must be connected in order to run successfully.
+func TestLiveView(t *testing.T) {
+	e := NewEOSClient()
+	e.Initialize()
+	defer e.Release()
+
+	models, _ := e.GetCameraModels()
+	camera := models[0]
+	defer camera.Release()
+	assert.Nil(t, camera.OpenSession())
+	defer camera.CloseSession()
+
+	assert.Nil(t, camera.SetLiveViewOutputDevice(TFT))
+	assert.Nil(t, camera.ToggleLiveView())
+	time.Sleep(3 * time.Second)
+	assert.Nil(t, camera.ToggleLiveView())
+	time.Sleep(1 * time.Second)
+}
+
+// At least one camera must be connected in order to run successfully.
+func TestLiveViewPC(t *testing.T) {
+	e := NewEOSClient()
+	e.Initialize()
+	defer e.Release()
+
+	models, _ := e.GetCameraModels()
+	camera := models[0]
+	defer camera.Release()
+	assert.Nil(t, camera.OpenSession())
+	defer camera.CloseSession()
+
+	assert.Nil(t, camera.SetLiveViewOutputDevice(PC))
+	assert.Nil(t, camera.ToggleLiveView())
+	time.Sleep(3 * time.Second)
+	assert.Nil(t, camera.ToggleLiveView())
+	time.Sleep(1 * time.Second)
 }
