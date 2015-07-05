@@ -3,6 +3,8 @@ Go bindings for Canon EDSDK to interface with Canon EOS digital cameras.
 
 **This is experimental and under active development, don't expect much**
 
+Demo video: https://youtu.be/IqDoLuCvbok
+
 ## Requirements
 You must first download the Canon EOS SDK, which involves [requesting access from Canon](http://usa.canon.com/cusa/support/professional/professional_cameras/eos_digital_slr_cameras/eos_7d/standard_display/SDK).
 
