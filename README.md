@@ -5,7 +5,7 @@ Go bindings for Canon EDSDK to interface with Canon EOS digital cameras.
 
 Demo video: https://youtu.be/IqDoLuCvbok
 
-Intervalometer (timer) demo using `canon-eos-go`: https://github.com/urlgrey/canon-intervalometer
+Intervalometer (timer) demo using `canon-eos-go`: https://github.com/skidder/canon-intervalometer
 
 ## Requirements
 You must first download the Canon EOS SDK, which involves [requesting access from Canon](http://usa.canon.com/cusa/support/professional/professional_cameras/eos_digital_slr_cameras/eos_7d/standard_display/SDK).
